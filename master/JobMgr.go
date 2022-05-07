@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/JacoobH/crontab/master/common"
+	"go.etcd.io/etcd/api/v3/mvccpb"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"time"
 )
@@ -110,6 +111,35 @@ func (jobMgr *JobMgr) DeleteJob(name string) (oldJob *common.Job, err error) {
 			return
 		}
 		oldJob = &oldJobObj
+	}
+	return
+}
+
+// ListJob List job
+func (jobMgr *JobMgr) ListJob() (jobList []*common.Job, err error) {
+	var (
+		dirKey  string
+		getResp *clientv3.GetResponse
+		kvPair  *mvccpb.KeyValue
+		job     *common.Job
+	)
+
+	dirKey = common.JOB_SAVE_DIR
+
+	if getResp, err = jobMgr.kv.Get(context.TODO(), dirKey, clientv3.WithPrefix()); err != nil {
+		return
+	}
+
+	// Initialize the array space
+	jobList = make([]*common.Job, 0)
+
+	for _, kvPair = range getResp.Kvs {
+		job = &common.Job{}
+		if err = json.Unmarshal(kvPair.Value, job); err != nil {
+			err = nil
+			continue
+		}
+		jobList = append(jobList, job)
 	}
 	return
 }

@@ -60,8 +60,31 @@ func JobDeleteHandler(c *gin.Context) {
 		goto ERR
 	}
 
-	//Return to normal reply({"errNo":0, "msg":"", "data":{}})
+	//Return to normal reply
 	if bytes, err = common.BuildResponse(0, "success", oldJob); err == nil {
+		c.JSON(http.StatusOK, string(bytes))
+	}
+	return
+ERR:
+	//Return exception reply
+	if bytes, err = common.BuildResponse(-1, err.Error(), nil); err == nil {
+		c.JSON(http.StatusOK, string(bytes))
+	}
+}
+
+// JobListHandler list all jobs of crontab
+func JobListHandler(c *gin.Context) {
+	var (
+		jobList []*common.Job
+		err     error
+		bytes   []byte
+	)
+	if jobList, err = G_jobMgr.ListJob(); err != nil {
+		goto ERR
+	}
+
+	//Return to normal reply
+	if bytes, err = common.BuildResponse(0, "success", jobList); err == nil {
 		c.JSON(http.StatusOK, string(bytes))
 	}
 	return
@@ -83,6 +106,7 @@ func InitApiServer() (err error) {
 	//配置路由
 	G_apiServer.router.POST("/job/save", JobSaveHandler)
 	G_apiServer.router.DELETE("/job/delete", JobDeleteHandler)
+	G_apiServer.router.GET("/job/list", JobListHandler)
 
 	if err = G_apiServer.router.Run(":" + G_config.ApiPort); err != nil {
 		return
