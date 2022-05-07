@@ -143,3 +143,29 @@ func (jobMgr *JobMgr) ListJob() (jobList []*common.Job, err error) {
 	}
 	return
 }
+
+// KillJob Kill job
+func (jobMgr *JobMgr) KillJob(name string) (err error) {
+	// Update key=/cron/killer/jobName
+	var (
+		killerKey string
+		leaseResp *clientv3.LeaseGrantResponse
+		leaseId   clientv3.LeaseID
+	)
+	//Notify worker to kill the corresponding job
+	killerKey = common.JOB_KILLER_DIR + name
+
+	// Let the worker listen for a PUT operation and create a lease that will automatically expire later
+	if leaseResp, err = jobMgr.lease.Grant(context.TODO(), 1); err != nil {
+		return
+	}
+
+	// Lease ID
+	leaseId = leaseResp.ID
+
+	// Set mark of killer
+	if _, err = jobMgr.kv.Put(context.TODO(), killerKey, "", clientv3.WithLease(leaseId)); err != nil {
+		return
+	}
+	return
+}

@@ -72,7 +72,7 @@ ERR:
 	}
 }
 
-// JobListHandler list all jobs of crontab
+// JobListHandler GET list all jobs of crontab
 func JobListHandler(c *gin.Context) {
 	var (
 		jobList []*common.Job
@@ -95,6 +95,35 @@ ERR:
 	}
 }
 
+// JobKillHandler POST /job/kill name=job1
+func JobKillHandler(c *gin.Context) {
+	var (
+		job   common.Job
+		err   error
+		bytes []byte
+	)
+
+	if err = c.ShouldBind(&job); err != nil {
+		goto ERR
+	}
+
+	if err = G_jobMgr.KillJob(job.Name); err != nil {
+		goto ERR
+	}
+
+	//Return to normal reply
+	if bytes, err = common.BuildResponse(0, "success", nil); err == nil {
+		c.JSON(http.StatusOK, string(bytes))
+	}
+
+	return
+ERR:
+	//Return exception reply
+	if bytes, err = common.BuildResponse(-1, err.Error(), nil); err == nil {
+		c.JSON(http.StatusOK, string(bytes))
+	}
+}
+
 func InitApiServer() (err error) {
 	gin.SetMode(gin.ReleaseMode)
 
@@ -107,6 +136,7 @@ func InitApiServer() (err error) {
 	G_apiServer.router.POST("/job/save", JobSaveHandler)
 	G_apiServer.router.DELETE("/job/delete", JobDeleteHandler)
 	G_apiServer.router.GET("/job/list", JobListHandler)
+	G_apiServer.router.POST("/job/kill", JobKillHandler)
 
 	if err = G_apiServer.router.Run(":" + G_config.ApiPort); err != nil {
 		return
