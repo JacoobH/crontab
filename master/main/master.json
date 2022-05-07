@@ -6,5 +6,8 @@
   "etcdEndPoints": ["127.0.0.1:2379"],
 
   "The etcd connection timed out": "Unit: millisecond",
-  "etcdDialTimeout": 5000
+  "etcdDialTimeout": 5000,
+
+  "Web page root directory": "Static pages, front and back end separate development",
+  "webroot": "webroot/*"
 }

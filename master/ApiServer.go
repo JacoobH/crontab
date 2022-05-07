@@ -125,6 +125,9 @@ ERR:
 }
 
 func InitApiServer() (err error) {
+	var (
+		jobGroup *gin.RouterGroup
+	)
 	gin.SetMode(gin.ReleaseMode)
 
 	// Assignment singleton
@@ -132,11 +135,20 @@ func InitApiServer() (err error) {
 		router: gin.Default(),
 	}
 
-	//配置路由
-	G_apiServer.router.POST("/job/save", JobSaveHandler)
-	G_apiServer.router.DELETE("/job/delete", JobDeleteHandler)
-	G_apiServer.router.GET("/job/list", JobListHandler)
-	G_apiServer.router.POST("/job/kill", JobKillHandler)
+	//Configure the routing
+	jobGroup = G_apiServer.router.Group("/job")
+	{
+		jobGroup.POST("/save", JobSaveHandler)
+		jobGroup.DELETE("/delete", JobDeleteHandler)
+		jobGroup.GET("/list", JobListHandler)
+		jobGroup.POST("/kill", JobKillHandler)
+	}
+
+	// set static file directory
+	G_apiServer.router.LoadHTMLGlob(G_config.Webroot)
+	G_apiServer.router.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", nil)
+	})
 
 	if err = G_apiServer.router.Run(":" + G_config.ApiPort); err != nil {
 		return
