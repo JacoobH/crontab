@@ -4,9 +4,9 @@ import "encoding/json"
 
 // Job timed task
 type Job struct {
-	Name     string `json:"name"`     // job name
-	Command  string `json:"command"`  // shell command
-	CronExpr string `json:"cronExpr"` // cron Expressions
+	Name     string `json:"name" form:"name"`         // job name
+	Command  string `json:"command" form:"command"`   // shell command
+	CronExpr string `json:"cronExpr" form:"cronExpr"` // cron Expressions
 }
 
 // Response HTTP interface response

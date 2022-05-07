@@ -63,7 +63,7 @@ func (jobMgr *JobMgr) SaveJob(job *common.Job) (oldJob *common.Job, err error) {
 	)
 
 	// etcd save key
-	jobKey = "/cron/jobs/" + job.Name
+	jobKey = common.JOB_SAVE_DIR + job.Name
 	fmt.Println(jobKey)
 
 	// job information json
@@ -80,6 +80,32 @@ func (jobMgr *JobMgr) SaveJob(job *common.Job) (oldJob *common.Job, err error) {
 	if putResp.PrevKv != nil {
 		// deserialize the old values
 		if err = json.Unmarshal(putResp.PrevKv.Value, &oldJobObj); err != nil {
+			err = nil
+			return
+		}
+		oldJob = &oldJobObj
+	}
+	return
+}
+
+// DeleteJob Delete job
+func (jobMgr *JobMgr) DeleteJob(name string) (oldJob *common.Job, err error) {
+	var (
+		jobKey    string
+		delResp   *clientv3.DeleteResponse
+		oldJobObj common.Job
+	)
+
+	jobKey = common.JOB_SAVE_DIR + name
+
+	// delete it from etcd
+	if delResp, err = jobMgr.kv.Delete(context.TODO(), jobKey, clientv3.WithPrevKV()); err != nil {
+		return
+	}
+
+	// return oldJob that be deleted
+	if len(delResp.PrevKvs) != 0 {
+		if err = json.Unmarshal(delResp.PrevKvs[0].Value, &oldJobObj); err != nil {
 			err = nil
 			return
 		}

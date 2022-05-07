@@ -15,6 +15,7 @@ var (
 	G_apiServer *ApiServer
 )
 
+// JobSaveHandler POST
 func JobSaveHandler(c *gin.Context) {
 	// POST job={"name":"job1", "command":"echo hello", "cronExpr":"* * * * *"}
 	var (
@@ -43,6 +44,34 @@ ERR:
 	}
 }
 
+// JobDeleteHandler DELETE /job/delete name=job1
+func JobDeleteHandler(c *gin.Context) {
+	var (
+		job    common.Job
+		err    error
+		oldJob *common.Job
+		bytes  []byte
+	)
+	if err = c.ShouldBind(&job); err != nil {
+		goto ERR
+	}
+
+	if oldJob, err = G_jobMgr.DeleteJob(job.Name); err != nil {
+		goto ERR
+	}
+
+	//Return to normal reply({"errNo":0, "msg":"", "data":{}})
+	if bytes, err = common.BuildResponse(0, "success", oldJob); err == nil {
+		c.JSON(http.StatusOK, string(bytes))
+	}
+	return
+ERR:
+	//Return exception reply
+	if bytes, err = common.BuildResponse(-1, err.Error(), nil); err == nil {
+		c.JSON(http.StatusOK, string(bytes))
+	}
+}
+
 func InitApiServer() (err error) {
 	gin.SetMode(gin.ReleaseMode)
 
@@ -53,6 +82,7 @@ func InitApiServer() (err error) {
 
 	//配置路由
 	G_apiServer.router.POST("/job/save", JobSaveHandler)
+	G_apiServer.router.DELETE("/job/delete", JobDeleteHandler)
 
 	if err = G_apiServer.router.Run(":" + G_config.ApiPort); err != nil {
 		return
