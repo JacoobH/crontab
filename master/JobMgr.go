@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/JacoobH/crontab/master/common"
+	common2 "github.com/JacoobH/crontab/common"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"time"
@@ -54,17 +54,17 @@ func InitJobMgr() (err error) {
 }
 
 // SaveJob Save job
-func (jobMgr *JobMgr) SaveJob(job *common.Job) (oldJob *common.Job, err error) {
+func (jobMgr *JobMgr) SaveJob(job *common2.Job) (oldJob *common2.Job, err error) {
 	// Save job to /cron/jobs/job_name -> json
 	var (
 		jobKey    string
 		jobValue  []byte
 		putResp   *clientv3.PutResponse
-		oldJobObj common.Job
+		oldJobObj common2.Job
 	)
 
 	// etcd save key
-	jobKey = common.JOB_SAVE_DIR + job.Name
+	jobKey = common2.JOB_SAVE_DIR + job.Name
 	fmt.Println(jobKey)
 
 	// job information json
@@ -90,14 +90,14 @@ func (jobMgr *JobMgr) SaveJob(job *common.Job) (oldJob *common.Job, err error) {
 }
 
 // DeleteJob Delete job
-func (jobMgr *JobMgr) DeleteJob(name string) (oldJob *common.Job, err error) {
+func (jobMgr *JobMgr) DeleteJob(name string) (oldJob *common2.Job, err error) {
 	var (
 		jobKey    string
 		delResp   *clientv3.DeleteResponse
-		oldJobObj common.Job
+		oldJobObj common2.Job
 	)
 
-	jobKey = common.JOB_SAVE_DIR + name
+	jobKey = common2.JOB_SAVE_DIR + name
 
 	// delete it from etcd
 	if delResp, err = jobMgr.kv.Delete(context.TODO(), jobKey, clientv3.WithPrevKV()); err != nil {
@@ -116,25 +116,25 @@ func (jobMgr *JobMgr) DeleteJob(name string) (oldJob *common.Job, err error) {
 }
 
 // ListJob List job
-func (jobMgr *JobMgr) ListJob() (jobList []*common.Job, err error) {
+func (jobMgr *JobMgr) ListJob() (jobList []*common2.Job, err error) {
 	var (
 		dirKey  string
 		getResp *clientv3.GetResponse
 		kvPair  *mvccpb.KeyValue
-		job     *common.Job
+		job     *common2.Job
 	)
 
-	dirKey = common.JOB_SAVE_DIR
+	dirKey = common2.JOB_SAVE_DIR
 
 	if getResp, err = jobMgr.kv.Get(context.TODO(), dirKey, clientv3.WithPrefix()); err != nil {
 		return
 	}
 
 	// Initialize the array space
-	jobList = make([]*common.Job, 0)
+	jobList = make([]*common2.Job, 0)
 
 	for _, kvPair = range getResp.Kvs {
-		job = &common.Job{}
+		job = &common2.Job{}
 		if err = json.Unmarshal(kvPair.Value, job); err != nil {
 			err = nil
 			continue
@@ -153,7 +153,7 @@ func (jobMgr *JobMgr) KillJob(name string) (err error) {
 		leaseId   clientv3.LeaseID
 	)
 	//Notify worker to kill the corresponding job
-	killerKey = common.JOB_KILLER_DIR + name
+	killerKey = common2.JOB_KILLER_DIR + name
 
 	// Let the worker listen for a PUT operation and create a lease that will automatically expire later
 	if leaseResp, err = jobMgr.lease.Grant(context.TODO(), 1); err != nil {

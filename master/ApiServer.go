@@ -2,7 +2,7 @@ package master
 
 import (
 	"fmt"
-	"github.com/JacoobH/crontab/master/common"
+	"github.com/JacoobH/crontab/common"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
