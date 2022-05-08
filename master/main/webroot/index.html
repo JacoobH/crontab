@@ -18,7 +18,7 @@
         </div>
         <div class="row">
             <div class="col-md-12">
-                <button type="button" class="btn btn-primary">新建任务</button>
+                <button type="button" class="btn btn-primary" id="new-job">新建任务</button>
             </div>
         </div>
         <div class="row">
@@ -71,18 +71,18 @@
                             <input type="text" class="form-control" id="edit-name" placeholder="任务名称">
                         </div>
                         <div class="form-group">
-                            <label for="shell-command">shell命令</label>
-                            <input type="text" class="form-control" id="shell-command" placeholder="shell命令">
+                            <label for="edit-command">shell命令</label>
+                            <input type="text" class="form-control" id="edit-command" placeholder="shell命令">
                         </div>
                         <div class="form-group">
-                            <label for="cron-expr">cron表达式</label>
-                            <input type="text" class="form-control" id="cron-expr" placeholder="cron表达式">
+                            <label for="edit-expr">cron表达式</label>
+                            <input type="text" class="form-control" id="edit-expr" placeholder="cron表达式">
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Save changes</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" id="save-job">保存任务</button>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
@@ -90,8 +90,31 @@
     <script>
         $(document).ready(function (){
             $("#job-list").on("click", ".edit-job", function (event){
-                console.log("edit")
+                $('#edit-name').val($(this).parents('tr').children('.job-name').text())
+                $('#edit-command').val($(this).parents('tr').children('.job-command').text())
+                $('#edit-expr').val($(this).parents('tr').children('.job-cronExpr').text())
                 $('#edit-modal').modal('show')
+            })
+
+            $('#new-job').on('click', function (){
+                $('#edit-name').val("")
+                $('#edit-command').val("")
+                $('#edit-expr').val("")
+                $('#edit-modal').modal('show')
+            })
+            
+            $('#save-job').on("click", function (){
+                var jobInfo = {name: $('#edit-name').val(), command: $('#edit-command').val(), cronExpr: $('#edit-expr').val()}
+                $.ajax({
+                    url: '/job/save',
+                    type: 'post',
+                    dataType: 'json',
+                    contentType: 'application/json;charset=utf-8',
+                    data: JSON.stringify(jobInfo),
+                    complete: function () {
+                        window.location.reload()
+                    }
+                })
             })
 
             $("#job-list").on("click", ".delete-job", function (event){
@@ -125,6 +148,7 @@
             function rebuildJobList(){
                 $.ajax({
                     url: '/job/list',
+                    type: 'get',
                     dataType: 'json',
                     success: function (resp) {
                         if (resp.errNo != 0){
