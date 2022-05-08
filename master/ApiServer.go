@@ -1,6 +1,7 @@
 package master
 
 import (
+	"fmt"
 	"github.com/JacoobH/crontab/master/common"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -47,9 +48,10 @@ func JobDeleteHandler(c *gin.Context) {
 		oldJob *common.Job
 	)
 	if err = c.ShouldBind(&job); err != nil {
+		fmt.Println(job)
 		goto ERR
 	}
-
+	fmt.Println(job)
 	if oldJob, err = G_jobMgr.DeleteJob(job.Name); err != nil {
 		goto ERR
 	}
