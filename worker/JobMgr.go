@@ -44,6 +44,7 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 	// current jobs
 	for _, kvpair = range getResp.Kvs {
 		if job, err = common.UnpackJob(kvpair.Value); err == nil {
+			jobEvent = common.BuildJobEvent(common.JOB_EVENT_SAVE, job)
 			// TODO:把这个job同步给scheduler(调度协程)
 			return
 		}
@@ -111,5 +112,8 @@ func InitJobMgr() (err error) {
 		lease:   lease,
 		watcher: watcher,
 	}
+
+	G_jobMgr.watchJobs()
+
 	return
 }
