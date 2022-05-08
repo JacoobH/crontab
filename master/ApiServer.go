@@ -22,7 +22,6 @@ func JobSaveHandler(c *gin.Context) {
 		job    common.Job
 		oldJob *common.Job
 		err    error
-		bytes  []byte
 	)
 	if err = c.ShouldBind(&job); err != nil {
 		goto ERR
@@ -33,15 +32,11 @@ func JobSaveHandler(c *gin.Context) {
 	}
 
 	//Return to normal reply({"errNo":0, "msg":"", "data":{}})
-	if bytes, err = common.BuildResponse(0, "success", oldJob); err == nil {
-		c.JSON(http.StatusOK, string(bytes))
-	}
+	c.JSON(http.StatusOK, common.BuildResponse(0, "success", oldJob))
 	return
 ERR:
 	//Return exception reply
-	if bytes, err = common.BuildResponse(-1, err.Error(), nil); err == nil {
-		c.JSON(http.StatusOK, string(bytes))
-	}
+	c.JSON(http.StatusOK, common.BuildResponse(-1, err.Error(), nil))
 }
 
 // JobDeleteHandler DELETE /job/delete name=job1
@@ -50,7 +45,6 @@ func JobDeleteHandler(c *gin.Context) {
 		job    common.Job
 		err    error
 		oldJob *common.Job
-		bytes  []byte
 	)
 	if err = c.ShouldBind(&job); err != nil {
 		goto ERR
@@ -61,15 +55,11 @@ func JobDeleteHandler(c *gin.Context) {
 	}
 
 	//Return to normal reply
-	if bytes, err = common.BuildResponse(0, "success", oldJob); err == nil {
-		c.JSON(http.StatusOK, string(bytes))
-	}
+	c.JSON(http.StatusOK, common.BuildResponse(0, "success", oldJob))
 	return
 ERR:
 	//Return exception reply
-	if bytes, err = common.BuildResponse(-1, err.Error(), nil); err == nil {
-		c.JSON(http.StatusOK, string(bytes))
-	}
+	c.JSON(http.StatusOK, common.BuildResponse(-1, err.Error(), nil))
 }
 
 // JobListHandler GET list all jobs of crontab
@@ -77,30 +67,25 @@ func JobListHandler(c *gin.Context) {
 	var (
 		jobList []*common.Job
 		err     error
-		bytes   []byte
 	)
 	if jobList, err = G_jobMgr.ListJob(); err != nil {
 		goto ERR
 	}
 
 	//Return to normal reply
-	if bytes, err = common.BuildResponse(0, "success", jobList); err == nil {
-		c.JSON(http.StatusOK, bytes)
-	}
+	//c.JSON(http.StatusOK, gin.H{"errno": 0, "msg": "success", "data": jobList})
+	c.JSON(http.StatusOK, common.BuildResponse(0, "success", jobList))
 	return
 ERR:
 	//Return exception reply
-	if bytes, err = common.BuildResponse(-1, err.Error(), nil); err == nil {
-		c.JSON(http.StatusOK, bytes)
-	}
+	c.JSON(http.StatusOK, common.BuildResponse(-1, err.Error(), nil))
 }
 
 // JobKillHandler POST /job/kill name=job1
 func JobKillHandler(c *gin.Context) {
 	var (
-		job   common.Job
-		err   error
-		bytes []byte
+		job common.Job
+		err error
 	)
 
 	if err = c.ShouldBind(&job); err != nil {
@@ -112,16 +97,11 @@ func JobKillHandler(c *gin.Context) {
 	}
 
 	//Return to normal reply
-	if bytes, err = common.BuildResponse(0, "success", nil); err == nil {
-		c.JSON(http.StatusOK, string(bytes))
-	}
-
+	c.JSON(http.StatusOK, common.BuildResponse(0, "success", nil))
 	return
 ERR:
 	//Return exception reply
-	if bytes, err = common.BuildResponse(-1, err.Error(), nil); err == nil {
-		c.JSON(http.StatusOK, string(bytes))
-	}
+	c.JSON(http.StatusOK, common.BuildResponse(-1, err.Error(), nil))
 }
 
 func InitApiServer() (err error) {

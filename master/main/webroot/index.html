@@ -59,47 +59,48 @@
     <script>
         $(document).ready(function (){
             $("#job-list").on("click", ".edit-job", function (event){
-                console.log("edit");
-            });
+                console.log("edit")
+            })
 
             $("#job-list").on("click", ".delete-job", function (event){
-                console.log("delete");
-            });
+                console.log("delete")
+            })
 
             $("#job-list").on("click", ".kill-job", function (event){
-                console.log("kill");
-            });
+                console.log("kill")
+            })
 
             function rebuildJobList(){
                 $.ajax({
                     url: '/job/list',
                     dataType: 'json',
                     success: function (resp) {
-                        if (resp.errno != 0){
-                            return;
+                        if (resp.errNo != 0){
+                            console.log("resp.errno == 0")
+                            return
                         }
 
-                        var jobList = resp.data;
+                        var jobList = resp.data
 
                         $('#job-list tbody').empty()
 
                         for (var i = 0; i < jobList.length; i++){
-                            var job = jobList[i];
-                            var tr = $("<tr>");
+                            var job = jobList[i]
+                            var tr = $("<tr>")
+                            tr.append($('<td class="job-name">').html(job.name))
+                            tr.append($('<td class="job-command">').html(job.command))
+                            tr.append($('<td class="job-cronExpr">').html(job.cronExpr))
+
+                            var toolbar = $('<div class="btn-toolbar">')
+                                .append('<button class="btn btn-info edit-job">编辑</button>')
+                                .append('<button class="btn btn-danger delete-job">删除</button>')
+                                .append('<button class="btn btn-warning kill-job">强杀</button>')
+
+                            tr.append($('<tr>').append(toolbar))
+                            $("#job-list tbody").append(tr)
                         }
-                        tr.append($('<td class="job-name">').html(job.name));
-                        tr.append($('<td class="job-command">').html(job.command));
-                        tr.append($('<td class="job-cronExpr">').html(job.cronExpr));
-
-                        var toolbar = $('<div class="btn-toolbar">')
-                            .append('<button class="btn btn-info edit-job">编辑</button>')
-                            .append('<button class="btn btn-danger delete-job">删除</button>')
-                            .append('<button class="btn btn-warning kill-job">强杀</button>')
-
-                        tr.append($('<tr>').append(toolbar))
-                        $("#job-list tbody").append(tr)
                     }
-                });
+                })
             }
             rebuildJobList()
         })

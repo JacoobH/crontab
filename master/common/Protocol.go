@@ -1,7 +1,5 @@
 package common
 
-import "encoding/json"
-
 // Job timed task
 type Job struct {
 	Name     string `json:"name" form:"name"`         // job name
@@ -16,7 +14,7 @@ type Response struct {
 	Data  interface{} `json:"data"`
 }
 
-func BuildResponse(errNo int, msg string, data interface{}) (resp []byte, err error) {
+func BuildResponse(errNo int, msg string, data interface{}) (resp Response) {
 	// 1. Define a response
 	var (
 		response Response
@@ -26,6 +24,6 @@ func BuildResponse(errNo int, msg string, data interface{}) (resp []byte, err er
 	response.Data = data
 
 	// 2. Serialize json
-	resp, err = json.Marshal(response)
+	resp = response
 	return
 }
