@@ -85,13 +85,13 @@ func JobListHandler(c *gin.Context) {
 
 	//Return to normal reply
 	if bytes, err = common.BuildResponse(0, "success", jobList); err == nil {
-		c.JSON(http.StatusOK, string(bytes))
+		c.JSON(http.StatusOK, bytes)
 	}
 	return
 ERR:
 	//Return exception reply
 	if bytes, err = common.BuildResponse(-1, err.Error(), nil); err == nil {
-		c.JSON(http.StatusOK, string(bytes))
+		c.JSON(http.StatusOK, bytes)
 	}
 }
 

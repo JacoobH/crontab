@@ -25,7 +25,7 @@
             <div class="col-md-12">
                 <div class="panel panel-default" style="margin-top: 20px">
                     <div class="panel-body">
-                        <table class="table table-striped">
+                        <table id="job-list" class="table table-striped">
                             <thead>
                             <tr>
                                 <th>任务名称</th>
@@ -35,19 +35,20 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr>
-                                <td class="job-name">job1</td>
-                                <td class="job-command">echo hello</td>
-                                <td class="job-cronExpr">* * * * *</td>
-                                <td>
-                                    <div class="btn-toolbar">
-                                        <button class="btn btn-info">编辑</button>
-                                        <button class="btn btn-danger">删除</button>
-                                        <button class="btn btn-warning">强杀</button>
+<!--                            <tr>-->
+<!--                                <td class="job-name">job1</td>-->
+<!--                                <td class="job-command">echo hello</td>-->
+<!--                                <td class="job-cronExpr">* * * * *</td>-->
+<!--                                <td>-->
+<!--                                    <div class="btn-toolbar">-->
+<!--                                        <button class="btn btn-info edit-job">编辑</button>-->
+<!--                                        <button class="btn btn-danger delete-job">删除</button>-->
+<!--                                        <button class="btn btn-warning kill-job">强杀</button>-->
 
-                                    </div>
-                                </td>
-                            </tr>
+<!--                                    </div>-->
+<!--                                </td>-->
+<!--                            </tr>-->
+
                             </tbody>
                         </table>
                     </div>
@@ -55,5 +56,53 @@
             </div>
         </div>
     </div>
+    <script>
+        $(document).ready(function (){
+            $("#job-list").on("click", ".edit-job", function (event){
+                console.log("edit");
+            });
+
+            $("#job-list").on("click", ".delete-job", function (event){
+                console.log("delete");
+            });
+
+            $("#job-list").on("click", ".kill-job", function (event){
+                console.log("kill");
+            });
+
+            function rebuildJobList(){
+                $.ajax({
+                    url: '/job/list',
+                    dataType: 'json',
+                    success: function (resp) {
+                        if (resp.errno != 0){
+                            return;
+                        }
+
+                        var jobList = resp.data;
+
+                        $('#job-list tbody').empty()
+
+                        for (var i = 0; i < jobList.length; i++){
+                            var job = jobList[i];
+                            var tr = $("<tr>");
+                        }
+                        tr.append($('<td class="job-name">').html(job.name));
+                        tr.append($('<td class="job-command">').html(job.command));
+                        tr.append($('<td class="job-cronExpr">').html(job.cronExpr));
+
+                        var toolbar = $('<div class="btn-toolbar">')
+                            .append('<button class="btn btn-info edit-job">编辑</button>')
+                            .append('<button class="btn btn-danger delete-job">删除</button>')
+                            .append('<button class="btn btn-warning kill-job">强杀</button>')
+
+                        tr.append($('<tr>').append(toolbar))
+                        $("#job-list tbody").append(tr)
+                    }
+                });
+            }
+            rebuildJobList()
+        })
+    </script>
 </body>
 </html>
