@@ -8,10 +8,12 @@ import (
 
 // Config Application configuration
 type Config struct {
-	ApiPort         string   `json:"apiPort"`
-	EtcdEndPoints   []string `json:"etcdEndPoints"`
-	EtcdDialTimeout int      `json:"etcdDialTimeout"`
-	Webroot         string   `json:"webroot"`
+	ApiPort            string   `json:"apiPort"`
+	EtcdEndPoints      []string `json:"etcdEndPoints"`
+	EtcdDialTimeout    int      `json:"etcdDialTimeout"`
+	Webroot            string   `json:"webroot"`
+	StaticRelativePath string   `json:"staticRelativePath"`
+	StaticRoot         string   `json:"staticRoot"`
 }
 
 var (

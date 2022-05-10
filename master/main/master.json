@@ -9,5 +9,9 @@
   "etcdDialTimeout": 5000,
 
   "Web page root directory": "Static pages, front and back end separate development",
-  "webroot": "webroot/*"
+  "webroot": "webroot/*",
+
+
+  "staticRelativePath": "/static",
+  "staticRoot": "static"
 }

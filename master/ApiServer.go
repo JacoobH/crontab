@@ -127,7 +127,7 @@ func InitApiServer() (err error) {
 	}
 
 	// set static file directory
-	G_apiServer.router.Static("/static", "static")
+	G_apiServer.router.Static(G_config.StaticRelativePath, G_config.StaticRoot)
 	G_apiServer.router.LoadHTMLGlob(G_config.Webroot)
 	G_apiServer.router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", nil)
