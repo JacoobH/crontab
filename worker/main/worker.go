@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/JacoobH/crontab/worker"
 	"runtime"
+	"time"
 )
 
 var (
@@ -31,7 +32,7 @@ func main() {
 	// Initialize command line arguments
 	initArgs()
 
-	//初始化线程
+	// Initializing the thread
 	initEnv()
 
 	// Load the configuration
@@ -44,6 +45,10 @@ func main() {
 	}
 
 	//正常退出
+	for {
+		time.Sleep(1 * time.Second)
+	}
+
 	return
 
 ERR:
