@@ -2,14 +2,23 @@ package common
 
 import (
 	"encoding/json"
+	"github.com/gorhill/cronexpr"
 	"strings"
+	"time"
 )
 
-// Job timed task
+// Job timed job
 type Job struct {
 	Name     string `json:"name" form:"name"`         // job name
 	Command  string `json:"command" form:"command"`   // shell command
 	CronExpr string `json:"cronExpr" form:"cronExpr"` // cron Expressions
+}
+
+// Job scheduling plan
+type JobSchedulePlan struct {
+	Job      *Job                 // Information about the tasks to be scheduled
+	Expr     *cronexpr.Expression // The resolved cronexpr expression
+	NextTime time.Time            // Next scheduling time
 }
 
 // Response HTTP interface response
@@ -61,4 +70,23 @@ func BuildJobEvent(eventType int, job *Job) (jobEvent *JobEvent) {
 		EventType: eventType,
 		Job:       job,
 	}
+}
+
+// BuildJobSchedulePlan Construct a job execution plan
+func BuildJobSchedulePlan(job *Job) (jobSchedulePlan *JobSchedulePlan, err error) {
+	var (
+		expr *cronexpr.Expression
+	)
+	// Parse the cron expression of the job
+	if expr, err = cronexpr.Parse(job.CronExpr); err != nil {
+
+	}
+
+	// Generate JobSchedulePlan object
+	jobSchedulePlan = &JobSchedulePlan{
+		Job:      job,
+		Expr:     expr,
+		NextTime: expr.Next(time.Now()),
+	}
+	return
 }

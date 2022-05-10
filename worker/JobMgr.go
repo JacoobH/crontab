@@ -2,7 +2,6 @@ package worker
 
 import (
 	"context"
-	"fmt"
 	"github.com/JacoobH/crontab/common"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -51,9 +50,9 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 			continue
 		}
 		jobEvent = common.BuildJobEvent(common.JOB_EVENT_SAVE, job)
-		fmt.Println(*jobEvent)
+		//fmt.Println(*jobEvent)
 		//把这个job同步给scheduler(调度协程)
-		//G_Scheduler.PushJobEventChan(jobEvent)
+		G_scheduler.PushJobEvent(jobEvent)
 	}
 	//2 打开一个协程，用来监听job任务变化，再将变化推送到scheduler调度协程
 	go func() {
@@ -84,8 +83,8 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 				}
 				//将修改任务推入到scheduler调度协程
 				//将删除任务推入到scheduler调度协程
-				//G_Scheduler.PushJobEventChan(jobEvent)
-				fmt.Println(*jobEvent)
+				G_scheduler.PushJobEvent(jobEvent)
+				//fmt.Println(*jobEvent)
 			}
 		}
 	}()
