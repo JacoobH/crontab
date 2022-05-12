@@ -1,6 +1,9 @@
 package worker
 
-import "github.com/JacoobH/crontab/common"
+import (
+	"github.com/JacoobH/crontab/common"
+	"time"
+)
 
 // Scheduler job scheduling
 type Scheduler struct {
@@ -32,11 +35,51 @@ func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent) {
 	}
 }
 
+// TrySchedule Recalculate the task scheduling status
+func (scheduler *Scheduler) TrySchedule() (scheduleAfter time.Duration) {
+	var (
+		jobPlan  *common.JobSchedulePlan
+		now      time.Time
+		nearTime *time.Time
+	)
+
+	if len(scheduler.jobPlanTable) == 0 {
+		scheduleAfter = 1 * time.Second
+		return
+	}
+	// current time
+	now = time.Now()
+	//1. Iterate through all jobs
+	for _, jobPlan = range scheduler.jobPlanTable {
+		if jobPlan.NextTime.Before(now) || jobPlan.NextTime.Equal(now) {
+			//TODO: try to exec job
+			jobPlan.NextTime = jobPlan.Expr.Next(now) // Updated the next execution time
+		}
+		// Count the last time a job expired
+		if nearTime == nil || jobPlan.NextTime.Before(*nearTime) {
+			nearTime = &jobPlan.NextTime
+		}
+	}
+
+	//Interval for next scheduling（earTime - now）
+	scheduleAfter = (*nearTime).Sub(now)
+	return
+	//2. Expired jobs are executed immediately
+	//3. Count the time of the most recent expired job (N seconds after expiration == scheduleAfter)
+}
+
 // scheduling coroutine
 func (scheduler *Scheduler) scheduleLoop() {
 	var (
-		jobEvent *common.JobEvent
+		jobEvent      *common.JobEvent
+		scheduleAfter time.Duration
+		scheduleTimer *time.Timer
 	)
+	//Initialize(1sec)
+	scheduleAfter = scheduler.TrySchedule()
+
+	//Delay timer for scheduling
+	scheduleTimer = time.NewTimer(scheduleAfter)
 	// Timing job common.Job
 	for {
 		select {
