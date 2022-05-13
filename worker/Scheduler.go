@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"fmt"
 	"github.com/JacoobH/crontab/common"
 	"time"
 )
@@ -53,6 +54,7 @@ func (scheduler *Scheduler) TrySchedule() (scheduleAfter time.Duration) {
 	for _, jobPlan = range scheduler.jobPlanTable {
 		if jobPlan.NextTime.Before(now) || jobPlan.NextTime.Equal(now) {
 			//TODO: try to exec job
+			fmt.Println("exec job:", jobPlan.Job.Name)
 			jobPlan.NextTime = jobPlan.Expr.Next(now) // Updated the next execution time
 		}
 		// Count the last time a job expired
@@ -86,7 +88,13 @@ func (scheduler *Scheduler) scheduleLoop() {
 		case jobEvent = <-scheduler.jobEventChan: // Listen for job change events
 			//CRUD the job list maintained in memory
 			scheduler.handleJobEvent(jobEvent)
+		case <-scheduleTimer.C: // The latest job is expired
+
 		}
+		//scheduling job
+		scheduleAfter = scheduler.TrySchedule()
+		//Reset scheduling interval
+		scheduleTimer.Reset(scheduleAfter)
 	}
 }
 
