@@ -11,6 +11,7 @@ type Scheduler struct {
 	jobEventChan      chan *common.JobEvent              // Etcd job event queue
 	jobPlanTable      map[string]*common.JobSchedulePlan // Job scheduling table
 	jobExecutingTable map[string]*common.JobExecuteInfo  // Job Execute table
+	jobResultChan     chan *common.JobExecuteResult
 }
 
 var (
@@ -58,6 +59,7 @@ func (scheduler *Scheduler) TryStartJob(jobSchedulePlan *common.JobSchedulePlan)
 
 	//TODO: exec job
 	fmt.Println("exec job:", jobExecuteInfo.Job.Name, jobExecuteInfo.PlanTime, jobExecuteInfo.RealTime)
+	G_executor.ExecuteJob(jobExecuteInfo)
 }
 
 // TrySchedule Recalculate the task scheduling status
@@ -77,7 +79,6 @@ func (scheduler *Scheduler) TrySchedule() (scheduleAfter time.Duration) {
 	//1. Iterate through all jobs
 	for _, jobPlan = range scheduler.jobPlanTable {
 		if jobPlan.NextTime.Before(now) || jobPlan.NextTime.Equal(now) {
-			//TODO: try to exec job
 			scheduler.TryStartJob(jobPlan)
 			//fmt.Println("exec job:", jobPlan.Job.Name)
 			jobPlan.NextTime = jobPlan.Expr.Next(now) // Updated the next execution time
@@ -95,12 +96,19 @@ func (scheduler *Scheduler) TrySchedule() (scheduleAfter time.Duration) {
 	//3. Count the time of the most recent expired job (N seconds after expiration == scheduleAfter)
 }
 
+func (scheduler *Scheduler) handleJobResult(jobExecuteResult *common.JobExecuteResult) {
+	// Deleting the Execution State
+	delete(scheduler.jobExecutingTable, jobExecuteResult.JobExecuteInfo.Job.Name)
+	fmt.Println("Task execution completed：", jobExecuteResult.JobExecuteInfo.Job.Name, jobExecuteResult.OutPut, jobExecuteResult.Err)
+}
+
 // scheduling coroutine
 func (scheduler *Scheduler) scheduleLoop() {
 	var (
 		jobEvent      *common.JobEvent
 		scheduleAfter time.Duration
 		scheduleTimer *time.Timer
+		jobResult     *common.JobExecuteResult
 	)
 	//Initialize(1sec)
 	scheduleAfter = scheduler.TrySchedule()
@@ -114,7 +122,8 @@ func (scheduler *Scheduler) scheduleLoop() {
 			//CRUD the job list maintained in memory
 			scheduler.handleJobEvent(jobEvent)
 		case <-scheduleTimer.C: // The latest job is expired
-
+		case jobResult = <-scheduler.jobResultChan: // Monitor the execution result of a task
+			scheduler.handleJobResult(jobResult)
 		}
 		//scheduling job
 		scheduleAfter = scheduler.TrySchedule()
@@ -134,8 +143,13 @@ func InitScheduler() (err error) {
 		jobEventChan:      make(chan *common.JobEvent, 1000),
 		jobPlanTable:      make(map[string]*common.JobSchedulePlan),
 		jobExecutingTable: make(map[string]*common.JobExecuteInfo),
+		jobResultChan:     make(chan *common.JobExecuteResult, 1000),
 	}
 	// Start scheduling coroutine
 	go G_scheduler.scheduleLoop()
 	return
+}
+
+func (scheduler *Scheduler) PushJobResult(jobExecuteResult *common.JobExecuteResult) {
+	scheduler.jobResultChan <- jobExecuteResult
 }

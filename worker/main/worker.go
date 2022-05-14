@@ -40,6 +40,11 @@ func main() {
 		goto ERR
 	}
 
+	// Initializing executor
+	if err = worker.InitExecutor(); err != nil {
+		goto ERR
+	}
+
 	// Initializing scheduler
 	if err = worker.InitScheduler(); err != nil {
 		goto ERR

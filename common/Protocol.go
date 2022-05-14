@@ -41,6 +41,16 @@ type JobEvent struct {
 	Job       *Job
 }
 
+// JobExecuteResult result of job exec
+type JobExecuteResult struct {
+	JobExecuteInfo *JobExecuteInfo // exec status
+	OutPut         []byte          // output
+	Err            error           // error
+	StartTime      time.Time       // start time
+	EndTime        time.Time       // end time
+
+}
+
 func BuildResponse(errNo int, msg string, data interface{}) (resp Response) {
 	// 1. Define a response
 	var (
