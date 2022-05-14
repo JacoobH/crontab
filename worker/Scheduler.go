@@ -99,7 +99,7 @@ func (scheduler *Scheduler) TrySchedule() (scheduleAfter time.Duration) {
 func (scheduler *Scheduler) handleJobResult(jobExecuteResult *common.JobExecuteResult) {
 	// Deleting the Execution State
 	delete(scheduler.jobExecutingTable, jobExecuteResult.JobExecuteInfo.Job.Name)
-	fmt.Println("Task execution completed：", jobExecuteResult.JobExecuteInfo.Job.Name, jobExecuteResult.OutPut, jobExecuteResult.Err)
+	fmt.Println("Task execution completed：", jobExecuteResult.JobExecuteInfo.Job.Name, string(jobExecuteResult.OutPut), jobExecuteResult.Err)
 }
 
 // scheduling coroutine
