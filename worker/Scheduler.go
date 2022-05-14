@@ -8,8 +8,9 @@ import (
 
 // Scheduler job scheduling
 type Scheduler struct {
-	jobEventChan chan *common.JobEvent              // Etcd job event queue
-	jobPlanTable map[string]*common.JobSchedulePlan // Job scheduling schedule
+	jobEventChan      chan *common.JobEvent              // Etcd job event queue
+	jobPlanTable      map[string]*common.JobSchedulePlan // Job scheduling table
+	jobExecutingTable map[string]*common.JobExecuteInfo  // Job Execute table
 }
 
 var (
@@ -36,6 +37,29 @@ func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent) {
 	}
 }
 
+// TryStartJob Try to start job
+func (scheduler *Scheduler) TryStartJob(jobSchedulePlan *common.JobSchedulePlan) {
+	var (
+		jobExecuteInfo *common.JobExecuteInfo
+		jobExecuting   bool
+	)
+
+	// if there is a job executing, skip
+	if jobExecuteInfo, jobExecuting = scheduler.jobExecutingTable[jobSchedulePlan.Job.Name]; jobExecuting {
+		fmt.Println("Not yet out, skip", jobSchedulePlan.Job.Name)
+		return
+	}
+
+	// build execute status info
+	jobExecuteInfo = common.BuildJobExecuteInfo(jobSchedulePlan)
+
+	// save execute status info
+	scheduler.jobExecutingTable[jobSchedulePlan.Job.Name] = jobExecuteInfo
+
+	//TODO: exec job
+	fmt.Println("exec job:", jobExecuteInfo.Job.Name, jobExecuteInfo.PlanTime, jobExecuteInfo.RealTime)
+}
+
 // TrySchedule Recalculate the task scheduling status
 func (scheduler *Scheduler) TrySchedule() (scheduleAfter time.Duration) {
 	var (
@@ -54,7 +78,8 @@ func (scheduler *Scheduler) TrySchedule() (scheduleAfter time.Duration) {
 	for _, jobPlan = range scheduler.jobPlanTable {
 		if jobPlan.NextTime.Before(now) || jobPlan.NextTime.Equal(now) {
 			//TODO: try to exec job
-			fmt.Println("exec job:", jobPlan.Job.Name)
+			scheduler.TryStartJob(jobPlan)
+			//fmt.Println("exec job:", jobPlan.Job.Name)
 			jobPlan.NextTime = jobPlan.Expr.Next(now) // Updated the next execution time
 		}
 		// Count the last time a job expired
@@ -106,8 +131,9 @@ func (scheduler *Scheduler) PushJobEvent(jobEvent *common.JobEvent) {
 // InitScheduler Initialize scheduler
 func InitScheduler() (err error) {
 	G_scheduler = &Scheduler{
-		jobEventChan: make(chan *common.JobEvent, 1000),
-		jobPlanTable: make(map[string]*common.JobSchedulePlan),
+		jobEventChan:      make(chan *common.JobEvent, 1000),
+		jobPlanTable:      make(map[string]*common.JobSchedulePlan),
+		jobExecutingTable: make(map[string]*common.JobExecuteInfo),
 	}
 	// Start scheduling coroutine
 	go G_scheduler.scheduleLoop()

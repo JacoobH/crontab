@@ -14,11 +14,18 @@ type Job struct {
 	CronExpr string `json:"cronExpr" form:"cronExpr"` // cron Expressions
 }
 
-// Job scheduling plan
+// JobSchedulePlan Job scheduling plan
 type JobSchedulePlan struct {
 	Job      *Job                 // Information about the tasks to be scheduled
 	Expr     *cronexpr.Expression // The resolved cronexpr expression
 	NextTime time.Time            // Next scheduling time
+}
+
+// JobExecuteInfo Job exec status
+type JobExecuteInfo struct {
+	Job      *Job
+	PlanTime time.Time // theory
+	RealTime time.Time // real
 }
 
 // Response HTTP interface response
@@ -87,6 +94,15 @@ func BuildJobSchedulePlan(job *Job) (jobSchedulePlan *JobSchedulePlan, err error
 		Job:      job,
 		Expr:     expr,
 		NextTime: expr.Next(time.Now()),
+	}
+	return
+}
+
+func BuildJobExecuteInfo(jobSchedulePlan *JobSchedulePlan) (jobExecuteInfo *JobExecuteInfo) {
+	jobExecuteInfo = &JobExecuteInfo{
+		Job:      jobSchedulePlan.Job,
+		PlanTime: jobSchedulePlan.NextTime,
+		RealTime: time.Now(),
 	}
 	return
 }
