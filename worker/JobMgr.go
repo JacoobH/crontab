@@ -58,7 +58,7 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 	go func() {
 		//2.1 获取当前版本号
 		revision = getResp.Header.Revision + 1
-		//2.2开始监听
+		//2.2开始监听(/cron/jobs/)
 		watchChan = jobMgr.watcher.Watch(context.TODO(), common.JOB_SAVE_DIR, clientv3.WithRev(revision), clientv3.WithPrefix())
 		//watchResp里有切片，无法直接比较空，只能用for...range ,不能用select
 		for watchResp = range watchChan {
@@ -92,6 +92,35 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 	return
 }
 
+func (jobMgr *JobMgr) watchKiller() {
+	var (
+		watchChan  clientv3.WatchChan
+		watchResp  clientv3.WatchResponse
+		watchEvent *clientv3.Event
+		jobEvent   *common.JobEvent
+	)
+	go func() {
+		//开始监听(/cron/killer)
+		watchChan = jobMgr.watcher.Watch(context.TODO(), common.JOB_KILLER_DIR, clientv3.WithPrefix())
+		//watchResp里有切片，无法直接比较空，只能用for...range ,不能用select
+		for watchResp = range watchChan {
+			//因为etcd在watch的时候，为了高吞吐量以及效率，所以有可能一次会发送多种监听事件在event中
+			//然后存入chan
+			for _, watchEvent = range watchResp.Events {
+				switch watchEvent.Type {
+				case mvccpb.PUT: // kill job event
+
+				case mvccpb.DELETE: //kill mark expired, auto delete
+				}
+				//将修改任务推入到scheduler调度协程
+				//将删除任务推入到scheduler调度协程
+				G_scheduler.PushJobEvent(jobEvent)
+				//fmt.Println(*jobEvent)
+			}
+		}
+	}()
+}
+
 func InitJobMgr() (err error) {
 	var (
 		config  clientv3.Config
@@ -121,7 +150,7 @@ func InitJobMgr() (err error) {
 	G_jobMgr.watchJobs()
 
 	//启动监听强杀任务
-	//G_jobMgr.watchKillJob()
+	G_jobMgr.watchKiller()
 	return
 }
 
