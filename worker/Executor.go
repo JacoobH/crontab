@@ -2,6 +2,7 @@ package worker
 
 import (
 	"github.com/JacoobH/crontab/common"
+	"math/rand"
 	"os/exec"
 	"time"
 )
@@ -32,6 +33,8 @@ func (executor *Executor) ExecuteJob(jobExecuteInfo *common.JobExecuteInfo) {
 
 		jobExecuteResult.StartTime = time.Now()
 
+		//Sleep randomly for 0 ~ 1 seconds
+		time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
 		err = jobLock.TryLock()
 		defer jobLock.Unlock()
 
