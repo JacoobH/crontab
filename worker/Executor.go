@@ -1,7 +1,6 @@
 package worker
 
 import (
-	"context"
 	"github.com/JacoobH/crontab/common"
 	"os/exec"
 	"time"
@@ -42,7 +41,7 @@ func (executor *Executor) ExecuteJob(jobExecuteInfo *common.JobExecuteInfo) {
 		} else {
 			// Reset the job startup time after capturing the lock（TryLock() is a network operation）
 			jobExecuteResult.StartTime = time.Now()
-			cmd = exec.CommandContext(context.TODO(), "/bin/bash", "-c", jobExecuteInfo.Job.Command)
+			cmd = exec.CommandContext(jobExecuteInfo.CancelCtx, "/bin/bash", "-c", jobExecuteInfo.Job.Command)
 			output, err = cmd.CombinedOutput()
 			jobExecuteResult.EndTime = time.Now()
 			jobExecuteResult.OutPut = output

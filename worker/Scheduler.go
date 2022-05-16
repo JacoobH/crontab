@@ -22,6 +22,8 @@ var (
 func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent) {
 	var (
 		jobSchedulePlan *common.JobSchedulePlan
+		jobExecuteInfo  *common.JobExecuteInfo
+		jobExecuting    bool
 		jobExisted      bool
 		err             error
 	)
@@ -34,6 +36,12 @@ func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent) {
 	case common.JOB_EVENT_DELETE:
 		if jobSchedulePlan, jobExisted = scheduler.jobPlanTable[jobEvent.Job.Name]; jobExisted {
 			delete(scheduler.jobPlanTable, jobEvent.Job.Name)
+		}
+	case common.JOB_EVENT_KILL:
+		// cancel command exec
+		if jobExecuteInfo, jobExecuting = scheduler.jobExecutingTable[jobEvent.Job.Name]; jobExecuting {
+			fmt.Println("cancel job:", jobExecuteInfo.Job.Name)
+			jobExecuteInfo.CancelFunc()
 		}
 	}
 }
@@ -99,7 +107,7 @@ func (scheduler *Scheduler) TrySchedule() (scheduleAfter time.Duration) {
 func (scheduler *Scheduler) handleJobResult(jobExecuteResult *common.JobExecuteResult) {
 	// Deleting the Execution State
 	delete(scheduler.jobExecutingTable, jobExecuteResult.JobExecuteInfo.Job.Name)
-	fmt.Println("Task execution completed：", jobExecuteResult.JobExecuteInfo.Job.Name, string(jobExecuteResult.OutPut), jobExecuteResult.Err)
+	fmt.Println("Task execution completed：", jobExecuteResult.JobExecuteInfo.Job.Name, jobExecuteResult.OutPut, jobExecuteResult.Err)
 }
 
 // scheduling coroutine

@@ -98,9 +98,10 @@ func (jobMgr *JobMgr) watchKiller() {
 		watchResp  clientv3.WatchResponse
 		watchEvent *clientv3.Event
 		jobEvent   *common.JobEvent
+		jobName    string
 	)
 	go func() {
-		//开始监听(/cron/killer)
+		//开始监听(/cron/killer/)
 		watchChan = jobMgr.watcher.Watch(context.TODO(), common.JOB_KILLER_DIR, clientv3.WithPrefix())
 		//watchResp里有切片，无法直接比较空，只能用for...range ,不能用select
 		for watchResp = range watchChan {
@@ -109,13 +110,13 @@ func (jobMgr *JobMgr) watchKiller() {
 			for _, watchEvent = range watchResp.Events {
 				switch watchEvent.Type {
 				case mvccpb.PUT: // kill job event
-
+					jobName = common.ExtractKillerName(string(watchEvent.Kv.Key))
+					jobEvent = common.BuildJobEvent(common.JOB_EVENT_KILL, &common.Job{
+						Name: jobName,
+					})
+					G_scheduler.PushJobEvent(jobEvent)
 				case mvccpb.DELETE: //kill mark expired, auto delete
 				}
-				//将修改任务推入到scheduler调度协程
-				//将删除任务推入到scheduler调度协程
-				G_scheduler.PushJobEvent(jobEvent)
-				//fmt.Println(*jobEvent)
 			}
 		}
 	}()
@@ -151,6 +152,7 @@ func InitJobMgr() (err error) {
 
 	//启动监听强杀任务
 	G_jobMgr.watchKiller()
+
 	return
 }
 

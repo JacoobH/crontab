@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/gorhill/cronexpr"
 	"strings"
@@ -23,9 +24,11 @@ type JobSchedulePlan struct {
 
 // JobExecuteInfo Job exec status
 type JobExecuteInfo struct {
-	Job      *Job
-	PlanTime time.Time // theory
-	RealTime time.Time // real
+	Job        *Job
+	PlanTime   time.Time // theory
+	RealTime   time.Time // real
+	CancelCtx  context.Context
+	CancelFunc context.CancelFunc
 }
 
 // Response HTTP interface response
@@ -82,6 +85,10 @@ func ExtractJobName(jobKey string) string {
 	return strings.TrimPrefix(jobKey, JOB_SAVE_DIR)
 }
 
+func ExtractKillerName(killerKey string) string {
+	return strings.TrimPrefix(killerKey, JOB_KILLER_DIR)
+}
+
 func BuildJobEvent(eventType int, job *Job) (jobEvent *JobEvent) {
 	return &JobEvent{
 		EventType: eventType,
@@ -114,5 +121,6 @@ func BuildJobExecuteInfo(jobSchedulePlan *JobSchedulePlan) (jobExecuteInfo *JobE
 		PlanTime: jobSchedulePlan.NextTime,
 		RealTime: time.Now(),
 	}
+	jobExecuteInfo.CancelCtx, jobExecuteInfo.CancelFunc = context.WithCancel(context.TODO())
 	return
 }
