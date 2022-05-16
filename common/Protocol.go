@@ -44,6 +44,17 @@ type JobEvent struct {
 	Job       *Job
 }
 
+type JobLog struct {
+	JobName      string `bson:"jobName"`
+	Command      string `bson:"command"`
+	Err          string `bson:"err"`
+	Output       string `bson:"output"`
+	PlanTime     int64  `bson:"planTime"`     //Planed start time
+	ScheduleTime int64  `bson:"scheduleTime"` //Actual scheduling time
+	StartTime    int64  `bson:"startTime"`    //Start time of job execution
+	EndTime      int64  `bson:"endTime"`      //Job end time
+}
+
 // JobExecuteResult result of job exec
 type JobExecuteResult struct {
 	JobExecuteInfo *JobExecuteInfo // exec status

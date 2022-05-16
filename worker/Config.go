@@ -7,8 +7,10 @@ import (
 
 // Config Application configuration
 type Config struct {
-	EtcdEndPoints   []string `json:"etcdEndPoints"`
-	EtcdDialTimeout int      `json:"etcdDialTimeout"`
+	EtcdEndPoints         []string `json:"etcdEndPoints"`
+	EtcdDialTimeout       int      `json:"etcdDialTimeout"`
+	MongodbUri            string   `json:"mongodbUri"`
+	MongodbConnectTimeout int      `json:"mongodbConnectTimeout"`
 }
 
 var (

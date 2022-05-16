@@ -105,8 +105,30 @@ func (scheduler *Scheduler) TrySchedule() (scheduleAfter time.Duration) {
 }
 
 func (scheduler *Scheduler) handleJobResult(jobExecuteResult *common.JobExecuteResult) {
+	var (
+		jobLog *common.JobLog
+	)
 	// Deleting the Execution State
 	delete(scheduler.jobExecutingTable, jobExecuteResult.JobExecuteInfo.Job.Name)
+
+	// Generate execution Logs
+	if jobExecuteResult.Err != common.ERR_CLOCK_ALREADY_REQUIRED {
+		jobLog = &common.JobLog{
+			JobName:      jobExecuteResult.JobExecuteInfo.Job.Name,
+			Command:      jobExecuteResult.JobExecuteInfo.Job.Command,
+			Output:       string(jobExecuteResult.OutPut),
+			PlanTime:     jobExecuteResult.JobExecuteInfo.PlanTime.UnixNano() / 1000 / 1000,
+			ScheduleTime: jobExecuteResult.JobExecuteInfo.RealTime.UnixNano() / 1000 / 1000,
+			StartTime:    jobExecuteResult.StartTime.UnixNano() / 1000 / 1000,
+			EndTime:      jobExecuteResult.EndTime.UnixNano() / 1000 / 1000,
+		}
+		if jobExecuteResult.Err != nil {
+			jobLog.Err = jobExecuteResult.Err.Error()
+		} else {
+			jobLog.Err = ""
+		}
+		//TODO: save to mongodb
+	}
 	fmt.Println("Task execution completed：", jobExecuteResult.JobExecuteInfo.Job.Name, jobExecuteResult.OutPut, jobExecuteResult.Err)
 }
 
