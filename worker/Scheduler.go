@@ -88,7 +88,7 @@ func (scheduler *Scheduler) TrySchedule() (scheduleAfter time.Duration) {
 	for _, jobPlan = range scheduler.jobPlanTable {
 		if jobPlan.NextTime.Before(now) || jobPlan.NextTime.Equal(now) {
 			scheduler.TryStartJob(jobPlan)
-			//fmt.Println("exec job:", jobPlan.Job.Name)
+			fmt.Println("exec job:", jobPlan.Job.Name)
 			jobPlan.NextTime = jobPlan.Expr.Next(now) // Updated the next execution time
 		}
 		// Count the last time a job expired
@@ -128,6 +128,7 @@ func (scheduler *Scheduler) handleJobResult(jobExecuteResult *common.JobExecuteR
 			jobLog.Err = ""
 		}
 		//TODO: save to mongodb
+		G_logLink.append(jobLog)
 	}
 	fmt.Println("Task execution completed：", jobExecuteResult.JobExecuteInfo.Job.Name, jobExecuteResult.OutPut, jobExecuteResult.Err)
 }

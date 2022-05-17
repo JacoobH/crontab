@@ -55,6 +55,11 @@ type JobLog struct {
 	EndTime      int64  `bson:"endTime"`      //Job end time
 }
 
+// LogBatch Log batches
+type LogBatch struct {
+	Logs []interface{}
+}
+
 // JobExecuteResult result of job exec
 type JobExecuteResult struct {
 	JobExecuteInfo *JobExecuteInfo // exec status

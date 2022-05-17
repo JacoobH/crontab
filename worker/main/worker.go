@@ -40,7 +40,7 @@ func main() {
 		goto ERR
 	}
 
-	if err = worker.InitLogSink(); err != nil {
+	if err = worker.InitLogLink(); err != nil {
 		goto ERR
 	}
 

@@ -9,5 +9,11 @@
   "MongodbUri" : "mongodb://localhost:27017",
 
   "Mongodb Connect Timeout" : "Unit: millisecond",
-  "MongodbConnectTimeout" : 5000
+  "MongodbConnectTimeout" : 5000,
+
+  "Log batch size" : "To reduce mongodb network round-trips, write in batches",
+  "JobLogBatchSize" : 100,
+
+  "Automatic log submission times out" : "Batches are automatically submitted more than one second before the threshold is reached",
+  "JobLogCommitTimeout" : 1000
 }
