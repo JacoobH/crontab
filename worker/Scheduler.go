@@ -128,7 +128,7 @@ func (scheduler *Scheduler) handleJobResult(jobExecuteResult *common.JobExecuteR
 			jobLog.Err = ""
 		}
 		//TODO: save to mongodb
-		G_logLink.append(jobLog)
+		G_logSink.append(jobLog)
 	}
 	fmt.Println("Task execution completed：", jobExecuteResult.JobExecuteInfo.Job.Name, jobExecuteResult.OutPut, jobExecuteResult.Err)
 }

@@ -106,6 +106,15 @@ ERR:
 	c.JSON(http.StatusOK, common.BuildResponse(-1, err.Error(), nil))
 }
 
+func JobLogHandler(c *gin.Context) {
+	//var (
+	//	name        string
+	//	skipParams  int
+	//	limitParams int
+	//)
+	//name =
+}
+
 func InitApiServer() (err error) {
 	var (
 		jobGroup *gin.RouterGroup
@@ -124,6 +133,7 @@ func InitApiServer() (err error) {
 		jobGroup.DELETE("/delete", JobDeleteHandler)
 		jobGroup.GET("/list", JobListHandler)
 		jobGroup.POST("/kill", JobKillHandler)
+		jobGroup.GET("log", JobLogHandler)
 	}
 
 	// set static file directory

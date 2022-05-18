@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type LogLink struct {
+type LogSink struct {
 	client         *mongo.Client
 	collection     *mongo.Collection
 	logChan        chan *common.JobLog
@@ -19,14 +19,14 @@ type LogLink struct {
 }
 
 var (
-	G_logLink *LogLink
+	G_logSink *LogSink
 )
 
-func (logLink *LogLink) saveLogs(batch *common.LogBatch) {
+func (logSink *LogSink) saveLogs(batch *common.LogBatch) {
 	//因为是插入日志，所以成功失败皆可
-	logLink.collection.InsertMany(context.TODO(), batch.Logs)
+	logSink.collection.InsertMany(context.TODO(), batch.Logs)
 }
-func (logLink *LogLink) writeLoop() {
+func (logSink *LogSink) writeLoop() {
 	var (
 		log          *common.JobLog
 		batch        *common.LogBatch //当前的日志批次
@@ -35,7 +35,7 @@ func (logLink *LogLink) writeLoop() {
 	)
 	for {
 		select {
-		case log = <-logLink.logChan:
+		case log = <-logSink.logChan:
 			//将获得到的日志进行写入
 			if batch == nil {
 				//证明是已经提交了或者是刚刚进入
@@ -45,7 +45,7 @@ func (logLink *LogLink) writeLoop() {
 					//这里传入的batch会与外部的batch不相同
 					return func() {
 						//将传入的超时批次放到autoCommitChan，让select检索到去做后面的事情
-						logLink.autoCommitChan <- batch
+						logSink.autoCommitChan <- batch
 					}
 				}(batch))
 
@@ -54,27 +54,27 @@ func (logLink *LogLink) writeLoop() {
 			//查看目前数量是否达到阈值，达到就提交
 			if len(batch.Logs) >= G_config.JobLogBatchSize {
 				//提交
-				logLink.saveLogs(batch)
+				logSink.saveLogs(batch)
 				//清空
 				batch = nil
 				//已经自动提交了，就将定时器停止(取消)
 				commitTimer.Stop()
 			}
-		case timeoutBatch = <-logLink.autoCommitChan:
+		case timeoutBatch = <-logSink.autoCommitChan:
 			//超时批次
 			//因为有可能刚发过来，日志马上满了。已经提交过了,batch就变化了
 			if timeoutBatch != batch {
 				continue //跳过提交
 			}
 			//提交
-			logLink.saveLogs(timeoutBatch)
+			logSink.saveLogs(timeoutBatch)
 			//清空
 			batch = nil
 		}
 	}
 }
 
-func InitLogLink() (err error) {
+func InitLogSink() (err error) {
 	var (
 		client     *mongo.Client
 		clientOps  *options.ClientOptions
@@ -90,19 +90,19 @@ func InitLogLink() (err error) {
 	//select table my_collection
 	collection = client.Database("cron").Collection("log")
 
-	G_logLink = &LogLink{
+	G_logSink = &LogSink{
 		client:         client,
 		collection:     collection,
 		logChan:        make(chan *common.JobLog, 1000),
 		autoCommitChan: make(chan *common.LogBatch, 1000),
 	}
-	go G_logLink.writeLoop()
+	go G_logSink.writeLoop()
 	return
 }
 
-func (logLink *LogLink) append(jobLog *common.JobLog) {
+func (logSink *LogSink) append(jobLog *common.JobLog) {
 	select {
-	case logLink.logChan <- jobLog:
+	case logSink.logChan <- jobLog:
 	default:
 		//When the queue is full, discarded
 	}

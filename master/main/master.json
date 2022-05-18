@@ -13,5 +13,11 @@
 
 
   "staticRelativePath": "/static",
-  "staticRoot": "static"
+  "staticRoot": "static",
+
+  "Mongodb address" : "Adopt Mongodb URI",
+  "MongodbUri" : "mongodb://localhost:27017",
+
+  "Mongodb Connect Timeout" : "Unit: millisecond",
+  "MongodbConnectTimeout" : 5000
 }
